@@ -1,0 +1,232 @@
+---
+title: "Education Landscape in India 2015"
+author: "Zehra Ali"
+date: "10 December 2016"
+output: html_document
+---
+
+## Higher Education Statistics- India 2015
+
+The purpose of this analysis is to study higher education / college enrollment rates in India in the year 2015. I have used data on enrollment totals and combined it with population data, so that my analysis reflects percentages and provides a meaningful comparison. 
+
+The hypothesis that I begin this study with is that there is discrimination in India based on:
+1. Gender
+2. Religion
+3. Caste
+
+Secondly, I also hypothesize that if discrimination exists, it will have a differential impact by state. Hence in my analysis, I will not only be looking at how the enrollment rates for the above three identified groups compare with general averages, but also zoom in at individual state level. The purpose is to study what state characteristics lead to a differential rate in enrollment.
+
+
+### Comparing State Averages 
+
+In this section, I look at the total enrollment in every state as a percentage of total college going population. This is defined by India as youth population that is between the age of 18 to 23 years old. 
+
+The bar chart below presents a synopsis of the enrollemnt rates. The top 3 states in rank order are:
+
+1. Chandigarh
+2. Puducherry
+3. Tamil Nadu
+
+The states with the lowest enrollment rates are:
+
+1. Lakshadweep
+2. Daman & Diu
+3. Dadra & Nagar Haveli
+
+```{r, echo= FALSE, message=FALSE, error=TRUE}
+
+library(dplyr)
+library(readr)
+library(ggplot2)
+library(tidyr)
+library(ggthemes)
+
+IndiaEducation2015<- read_csv("IndiaEducation2015.csv")
+
+#Creating enrollment percentages for every state using total enrollemnt in higher education and population between 18-23 age group data
+
+IndiaEducation2015$Enroll_Percent_Total<- (IndiaEducation2015$ac_total/IndiaEducation2015$population_total)*100
+
+#Enroll_Percent_State_Graph<-
+  
+#Graph1  
+#theme_set(theme_gray(base_size = 15))
+theme_set(theme_grey())
+
+#plot0<- 
+ggplot(IndiaEducation2015, aes(x=state, y=Enroll_Percent_Total)) +geom_bar(stat = "Identity",color="black", fill = "lightblue") + labs(x= "State", y="Enrollment Percentage", title= "State Wise Higher Education Enrollment of Young Adults") +theme(axis.text.x=element_text(angle=90, size=10, vjust =0.5))
+
+```
+
+```{r, echo= FALSE, message=FALSE, error=TRUE}
+
+IndiaEducation2015$Percent_Male<- (IndiaEducation2015$ac_m/IndiaEducation2015$ac_total)*100
+
+IndiaEducation2015$Percent_Female<- (IndiaEducation2015$ac_f/IndiaEducation2015$ac_total)*100
+
+data_long3 <- IndiaEducation2015
+colnames(data_long3)[29] <- "Male"
+colnames(data_long3)[30] <- "Female"
+
+data_long4 <- gather(data_long3, `Male`,`Female`, key="Gender", value="Enroll_Percent")
+
+#Graph 3 
+#plot23<- 
+Palette1 <- c('indianred2','gray31')
+
+#ggplot(data_long4, aes(x=state, y=Enroll_Percent, fill=Gender)) + geom_bar(stat = "Identity", position = "dodge")+ labs(x= "State", y="Enrollment Percentage", title= "Higher Education Proportion of Enrollment by Gender") + theme(axis.text.x=element_text(angle=90, size=10, vjust =0.5)) + scale_fill_manual(values=Palette1 )
+
+```
+
+### Comparing Male vs. Female Enrollment
+
+To do a comparative analysis for males vs. female enrollment in every state, I calculated the relative enrollment for each gender based on their population in the state. Again the 18 to 23 age group was used. 
+
+The following bar chart shows that in most states females have an equal representation as compared to their male counterparts. Chandigarh, which was our highest performing state in the first part of our analysis, also stands out in this analysis with about 10% more female representation than male figures. 
+
+However some states that have a lesser female representation include the following, ranked in order of magnitude of negative difference (lesser females):
+1. Andhra Pradesh
+2. Telangana
+3. Tamil Nadu
+
+Since the differences are not large, and do not exist at a systematic level for every state, the data does not show significant evidence of discrimination against females.
+
+
+```{r, echo= FALSE, message=FALSE, error= T}
+IndiaEducation2015$Enroll_Percent_Male<- (IndiaEducation2015$ac_m/IndiaEducation2015$population_m)*100
+
+IndiaEducation2015$Enroll_Percent_Female<- (IndiaEducation2015$ac_f/IndiaEducation2015$population_f)*100
+
+data_long <- IndiaEducation2015
+colnames(data_long)[31] <- "Male"
+colnames(data_long)[32] <- "Female"
+
+data_long2 <- gather(data_long, `Male`,`Female`, key="Gender", value="Enroll_Percent")
+
+
+#Graph 2
+#plot100<-
+ggplot(data_long2, aes(x=state, y=Enroll_Percent, fill=Gender)) +geom_bar(stat = "Identity", position="dodge") + labs(x= "State", y="Enrollment Percentage", title= "Gender Based Relative Enrollment by Population") + theme(axis.text.x=element_text(angle=90, size=10, vjust =0.5)) + scale_fill_manual(values=Palette1 )
+
+```
+
+
+### Gender Analysis: For religious minorities
+
+Even though an overall analysis using state wide and total population numbers did not show nay discrimination against females, I zoomed in to look at female enrollment rates only for the Muslim population in every state. This analysis is driven by the hypothesis that Muslim families in India, tend to hold more conservative views against female education.
+
+The following chart shows, that limiting analysis only to Muslim population has increased the difference in male and female bars. Puducherry, the state with the second highest overall enrollment, shows the biggest difference in female representation as compared to male representation for the Muslim population in that state. Tamil Nadu follows second, with a huge gap as well. 
+
+There are still many states that show similar levels of male vs. female representation, with Andaman and Nicobar Islands having much higher female representation as compared to male. This shows that discrimination even within the Muslim population is not country wide, but rather concentrated in certain states.
+
+```{r, echo= FALSE, message=FALSE, error= TRUE}
+
+# droping two states that are not in population census 2011 data
+IndiaEducation2011<- IndiaEducation2015[!(IndiaEducation2015$state== "Andhra Pradesh" | IndiaEducation2015$state== "Telangana"),]
+
+#reading in census data
+Muslim_Pop_Gender<- read_csv("Muslims Census.csv")
+
+#Merging with population census 2011 data 
+Muslim_Education2011Pop<- left_join(IndiaEducation2011, Muslim_Pop_Gender)
+
+# calculating percentage representation 
+Muslim_Education2011Pop$Percent_Male_Muslim <- (Muslim_Education2011Pop$muslim_m/ Muslim_Education2011Pop$muslim_pop_m)* 100
+
+Muslim_Education2011Pop$Percent_Female_Muslim<- (Muslim_Education2011Pop$muslim_f/ Muslim_Education2011Pop$muslim_pop_f) *100
+
+data_long_muslim <- Muslim_Education2011Pop 
+colnames(data_long_muslim)[36] <- "Male"
+colnames(data_long_muslim)[37] <- "Female"
+
+data_long_muslim <- gather(data_long_muslim, `Male`,`Female`, key="Gender", value="Enroll_Percent")
+
+Palette1 <- c('tomato2','mediumseagreen')
+
+#plot140<- 
+ggplot(data_long_muslim, aes(x=state, y=Enroll_Percent, fill=Gender)) + geom_bar(stat = "Identity", position = "dodge")+ labs(x= "State", y="Enrollment Percentage", title= "Higher Education Proportion of Enrollment by Gender for Muslims") + theme(axis.text.x=element_text(angle=90, size=10, vjust =0.5)) + scale_fill_manual(values=Palette1)
+
+```
+
+### Comparing Overall Muslim Enrollment to State Averages
+
+Another question of concern that I wanted to address in this analysis is whether Muslims are systematically underrepresented in enrollment. This is driven by the hypothesis that most Muslims go to attend only Muslim centric universities, while access to other prestigious institutions is limited. 
+
+The following chart shows that this is a systematic national level problem. Muslim representation as a percentage of their population is extremely low in most states. Especially Chandigarh that topped their rank for highest enrollment has one of the lowest figures in Muslim representation or in other words showing the biggest gap between state average enrollments vs. Muslim enrollment. 
+
+This shows a clear need of pro-minority policy to increase access for Muslims to higher education institutes.
+
+
+```{r, echo= FALSE, message=FALSE, error= TRUE}
+
+Muslim_Education2011Pop$Muslim <- Muslim_Education2011Pop$muslim_total/Muslim_Education2011Pop$muslim_pop_total*100
+
+colnames(Muslim_Education2011Pop)[28] = "State Average"
+
+data_long_muslim2 <- gather(Muslim_Education2011Pop, `Muslim`, `State Average`, key="Class", value = "Enroll_Percent")
+
+
+ggplot(data_long_muslim2, aes(x=state, y=Enroll_Percent, fill=Class)) + geom_bar(stat = "Identity", position = "dodge")+ labs(x= "State", y="Enrollment Percentage", title= "Enrollment of Muslims vs State Average") + theme(axis.text.x=element_text(angle=90, size=10, vjust =0.5))
+
+```
+
+### Analysis for 5 largest Minority States: Muslims/ SC/ ST compared to State Average  
+
+This part of the analysis focuses on the states that rank top 5 in their total minority population. For this analysis the minority populations that I will be looking at, include 3 groups: Muslims, Scheduled Caste and Scheduled Tribe. This is to see if concentration of minorities, lead to more discrimination or more support for the groups? If minority groups are identified to have consistently lower enrollment percentage as compared to state averages in these five states, then we can conclude that minority concentration in area does not improve their power over state policy.
+
+The following series of charts show that the three minority groups perform consistently lower in all 5 states (with the only exception being Scheduled Tribe enrollment in Uttar Pradesh). Muslims through the 5 states have the lowest representation, even when compared across the three minority groups.
+
+```{r, echo= FALSE, message=FALSE, error= TRUE}
+#merging population data 
+#creating new variable that is sum of population of Muslims, SC, ST, OBC (to rank states based on largest minority pouplation)
+
+Minorities_Population <- read_csv("minority_population_data.csv")
+
+
+EducationAndPopulation<- left_join(Muslim_Education2011Pop, Minorities_Population)
+
+EducationAndPopulation$sum_minorities<- EducationAndPopulation$muslim_pop_total +  EducationAndPopulation$sc_pop_total + EducationAndPopulation$st_pop_total
+
+#Pick 5 states with max minority population 
+
+EducationAndPopulationTop5<- EducationAndPopulation %>%
+  arrange(desc(sum_minorities)) %>%
+  slice(1:5)
+
+# do above analysis for those 5
+
+EducationAndPopulationTop5$SC <- EducationAndPopulationTop5$sc_total/EducationAndPopulationTop5$sc_pop_total*100
+
+EducationAndPopulationTop5$ST <- EducationAndPopulationTop5$st_total/EducationAndPopulationTop5$st_pop_total*100
+
+EducationAndPopulationTop5$Muslim <- EducationAndPopulationTop5$muslim_total /EducationAndPopulationTop5$muslim_pop_total*100
+
+EducationAndPopulationTop5$State_Average <- EducationAndPopulationTop5$ac_total /EducationAndPopulationTop5$ac_pop_total*100
+
+
+data_long_top5 <- gather(EducationAndPopulationTop5, `SC`, `ST`, `Muslim`, `State_Average`,  key="Minority", value="Enroll_Percent")
+
+#use facteing to present graphs side by side 
+
+ggplot(data_long_top5, aes( x= Minority, y= Enroll_Percent, color = state, fill= state)) + geom_bar(stat = "Identity", position = "dodge") + labs(y= "Enrollment Percentage", title= "Minority Enrollment in Five Largest Minority States") + facet_grid( state ~ .)
+
+```
+
+### An Overall Comparison- Looking at Resource Allocation
+
+To conclude the analysis, the graph bellow maps out every state on its enrollment figures and resource allocation, which is represented in the graph by the student teacher ratio. The lower the ratio is, the state is better funded. The colors in this chart show the strength of minority population within the state, with growing population being represented by darker red colors.
+
+The chart shows that the states with more minority population are all towards the bottom half of the graph. Some of worst performing states on these two axes, also happen to have the greatest number of minority population (Uttar Pradesh, West Bengal, Bihar).
+
+To conclude, this analysis calls upon the state to take restorative policy measures to end discrimination against minority groups, and have measures that encourage greater representation from these populations.
+
+```{r, echo= FALSE, message=FALSE, error=TRUE}
+
+data_for_textplot2<- EducationAndPopulation
+colnames(data_for_textplot2)[28]<- "Enroll_Percent_Total"
+colnames(data_for_textplot2)[48]<- "Minority_Population"
+
+
+ggplot(data_for_textplot2, aes(ptr_regular, Enroll_Percent_Total, label=state, color = Minority_Population))+ geom_text (size = 3, check_overlap= TRUE)+ labs(x= "Student Teacher Ratio", y="Enrollment Percentage", title= "State Resources vs Enrollment Percentage Map")+ scale_color_gradient(low="blue", high="red") 
+
+```
